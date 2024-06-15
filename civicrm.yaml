@@ -125,7 +125,7 @@ spec:
         app: twenty-crm
     spec:
       containers:
-        - image: twenty-crm:latest
+        - image: twentycrm/twenty-server
           name: twenty-crm
           envFrom:
             - configMapRef:
