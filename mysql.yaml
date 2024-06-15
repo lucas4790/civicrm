@@ -11,6 +11,8 @@ spec:
     requests:
       storage: 10Gi
 ---
+storage: 10Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,7 +54,7 @@ spec:
         - name: mysql-storage
           mountPath: /var/lib/mysql
         command: ["mysqld"]
-        args: ["--max_allowed_packet=64M"]
+        args: ["--max_allowed_packet=64M", "--wait_timeout=300", "--net_read_timeout=300"]
       volumes:
       - name: mysql-storage
         persistentVolumeClaim:
