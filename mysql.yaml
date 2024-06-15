@@ -54,6 +54,9 @@ spec:
       - name: mysql-storage
         persistentVolumeClaim:
           claimName: mysql-pvc
+      - name: mysql-config-volume
+        configMap:
+          name: mysql-config
 ---
 # MySQL Service
 apiVersion: v1
@@ -79,3 +82,13 @@ data:
   db_user: cGl1c2Vy # base64 encoded value of 'piuser'
   db_password: cGlwYXNz # base64 encoded value of 'pipass'
   db_name: Y2l2aWNybQ== # base64 encoded value of 'civicrm'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: default
+data:
+  my.cnf: |
+    [mysqld]
+    max_allowed_packet=64M
