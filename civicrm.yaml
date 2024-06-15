@@ -10,7 +10,7 @@ metadata:
   name: twenty-crm-config
   namespace: twenty-crm
 data:
-  DATABASE_URL: "mysql://username:password@mysql/twentycrm"
+  DATABASE_URL: "mysql://mysqluser:mysqlpassword@mysql/twentycrm"
 
 ---
 apiVersion: v1
@@ -20,8 +20,8 @@ metadata:
   namespace: twenty-crm
 type: Opaque
 data:
-  mysql-root-password: c3VwZXJzZWNyZXRwYXNz
-  mysql-password: bXlzcWxwYXNzd29yZA==
+  mysql-root-password: c3VwZXJzZWNyZXRwYXNz  # supersecretpass (base64 encoded)
+  mysql-password: bXlzcWxxcGFzc3dvcmQ=      # mysqlpassword (base64 encoded)
 
 ---
 apiVersion: v1
@@ -91,6 +91,16 @@ spec:
           volumeMounts:
             - name: mysql-persistent-storage
               mountPath: /var/lib/mysql
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 60
+            periodSeconds: 20
       volumes:
         - name: mysql-persistent-storage
           persistentVolumeClaim:
@@ -125,7 +135,7 @@ spec:
         app: twenty-crm
     spec:
       containers:
-        - image: twentycrm/twenty-server
+        - image: twenty-crm:latest
           name: twenty-crm
           envFrom:
             - configMapRef:
