@@ -67,3 +67,15 @@ spec:
     targetPort: 3306
   selector:
     app: mysql
+---
+# Secret for Database Credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: civicrm-db-secret
+  namespace: default
+type: Opaque
+data:
+  db_user: cGl1c2Vy # base64 encoded value of 'piuser'
+  db_password: cGlwYXNz # base64 encoded value of 'pipass'
+  db_name: Y2l2aWNybQ== # base64 encoded value of 'civicrm'
