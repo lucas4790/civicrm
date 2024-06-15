@@ -1,0 +1,114 @@
+# Secret for Database Credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: civicrm-db-secret
+  namespace: default
+type: Opaque
+data:
+  db_user: cGl1c2Vy # base64 encoded value of 'piuser'
+  db_password: cGlwYXNz # base64 encoded value of 'pipass'
+  db_name: Y2l2aWNybQ== # base64 encoded value of 'civicrm'
+---
+
+---
+# Persistent Volume Claim for CiviCRM
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: civicrm-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# ConfigMap for CiviCRM Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: civicrm-config
+  namespace: default
+data:
+  CIVICRM_BASE_URL: http://localhost:8080
+  CIVICRM_SITE_KEY: randomsitekey
+---
+# CiviCRM Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: civicrm-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: civicrm
+  template:
+    metadata:
+      labels:
+        app: civicrm
+    spec:
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.31
+        command: ['sh', '-c', 'until nc -z -v -w30 mysql 3306; do echo "Waiting for database connection..."; sleep 5; done; echo "Database is ready!"']
+      containers:
+      - name: civicrm
+        image: dotriver/civicrm:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: DB_HOST
+          value: mysql
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: civicrm-db-secret
+              key: db_user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: civicrm-db-secret
+              key: db_password
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: civicrm-db-secret
+              key: db_name
+        - name: CIVICRM_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: civicrm-config
+              key: CIVICRM_BASE_URL
+        - name: CIVICRM_SITE_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: civicrm-config
+              key: CIVICRM_SITE_KEY
+        volumeMounts:
+        - name: civicrm-storage
+          mountPath: /var/www/html/sites/default/files
+      volumes:
+      - name: civicrm-storage
+        persistentVolumeClaim:
+          claimName: civicrm-pvc
+---
+# CiviCRM Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: civicrm-service
+  namespace: default
+spec:
+  selector:
+    app: civicrm
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
