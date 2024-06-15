@@ -10,8 +10,6 @@ data:
   db_password: cGlwYXNz # base64 encoded value of 'pipass'
   db_name: Y2l2aWNybQ== # base64 encoded value of 'civicrm'
 ---
-
----
 # Persistent Volume Claim for CiviCRM
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -32,7 +30,7 @@ metadata:
   name: civicrm-config
   namespace: default
 data:
-  CIVICRM_BASE_URL: http://localhost:8080
+  CIVICRM_BASE_URL: http://192.168.1.201:8080
   CIVICRM_SITE_KEY: randomsitekey
 ---
 # CiviCRM Deployment
@@ -109,6 +107,7 @@ spec:
     app: civicrm
   ports:
   - protocol: TCP
-    port: 80
-    targetPort: 80
+    port: 8080
+    targetPort: 8080
   type: LoadBalancer
+  loadBalancerIP: 192.168.1.201
