@@ -28,7 +28,7 @@ spec:
       - name: mysql
         image: mysql:5.7
         command: ["mysqld"]
-        args: ["--max_allowed_packet=64M", "--wait_timeout=300", "--net_read_timeout=300"]
+        args: ["--max_allowed_packet=16777216", "--wait_timeout=300", "--net_read_timeout=300"]
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: rootpass
